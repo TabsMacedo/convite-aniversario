@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createHmac } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { createApp } from '../server.mjs';
+import { registerConfirmedGuests } from '../lib/confirmed-guests.mjs';
 
 const qaRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../.qa');
 const password = 'senha-apenas-do-teste-2027';
@@ -203,6 +204,75 @@ test('família é incluída no banco existente e no DOCX sem duplicar ou alterar
   assert.match(xml, /Vou: 10 \| Talvez: 1 \| Não vou: 0/);
   for (const row of before) assert.ok(xml.includes(row.name));
   assert.ok(xml.includes(mariaNote));
+});
+
+test('acompanhantes do Elvis entram nos totais e no DOCX e o recado é complementado uma única vez', async (t) => {
+  const app = await fixture();
+  t.after(() => app.close());
+  const request = (path, options) => fetch(app.url + path, options);
+  const originalNote = 'Estarei presente com a minha família.';
+  const response = await request('/api/rsvp', post({ name: 'Elvis Silva', status: 'yes', note: originalNote }));
+  assert.equal(response.status, 200);
+  const guestCookie = cookieFrom(response);
+  const login = await request('/api/admin/login', post({ password }));
+  assert.equal(login.status, 200);
+  const headers = { Cookie: cookieFrom(login) };
+  const list = async () => (await (await request('/api/admin/responses', { headers })).json()).responses;
+  const original = (await list()).find((row) => row.name === 'Elvis Silva');
+  assert.equal(original.note, originalNote);
+  await app.restart();
+  const after = await list();
+  assert.equal(after.length, 12);
+  const elvis = after.find((row) => row.id === original.id);
+  assert.equal(elvis.name, original.name);
+  assert.equal(elvis.created_at, original.created_at);
+  assert.equal(elvis.status, 'yes');
+  assert.ok(elvis.note.startsWith(originalNote + '\n\n'));
+  assert.match(elvis.note, /esposa Joyce, a filha Pietra e o namorado da Pietra/);
+  assert.match(elvis.note, /4 pessoas, incluindo Elvis/);
+  assert.match(elvis.note, /não somar novamente/);
+  for (const name of ['Joyce', 'Pietra', 'Namorado da Pietra']) {
+    const matches = after.filter((row) => row.name === name);
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].status, 'yes');
+    assert.match(matches[0].note, /Acompanha Elvis Silva/);
+  }
+  await app.restart();
+  assert.deepEqual(await list(), after);
+  const download = await request('/api/admin/export.docx', { headers });
+  assert.equal(download.status, 200);
+  const xml = unzipStored(Buffer.from(await download.arrayBuffer())).get('word/document.xml');
+  assert.match(xml, /Vou: 12 \| Talvez: 0 \| Não vou: 0/);
+  for (const name of ['Elvis Silva', 'Joyce', 'Pietra', 'Namorado da Pietra']) assert.ok(xml.includes(name));
+  assert.ok(xml.includes(originalNote));
+  // O cookie original continua permitindo que Elvis atualize sua própria resposta.
+  const editedNote = 'Nova observação do Elvis.';
+  const update = await request('/api/rsvp', post({ name: 'Elvis Silva', status: 'yes', note: editedNote }, { Cookie: guestCookie }));
+  assert.equal(update.status, 200);
+  await app.restart();
+  const edited = await list();
+  assert.equal(edited.length, 12);
+  assert.equal(edited.find((row) => row.id === original.id).note, editedNote);
+});
+
+test('atualização de Elvis ignora nomes parecidos e homônimos sem editar seus recados', () => {
+  for (const names of [['Elvis da Silva'], ['Elvis Silva', ' ELVIS   SILVA ']]) {
+    const db = new DatabaseSync(':memory:');
+    try {
+      db.exec(`CREATE TABLE responses (
+        id TEXT PRIMARY KEY, edit_hash TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL, status TEXT NOT NULL, note TEXT NOT NULL,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      ) STRICT`);
+      const insert = db.prepare('INSERT INTO responses VALUES (?, ?, ?, ?, ?, ?, ?)');
+      for (const [index, name] of names.entries()) insert.run(`guest-${index}`, `hash-${index}`, name, 'yes', 'Recado original.', '2026-11-01', '2026-11-01');
+      registerConfirmedGuests(db);
+      const guests = db.prepare("SELECT * FROM responses WHERE id LIKE 'guest-%'").all();
+      assert.equal(db.prepare('SELECT count(*) AS total FROM responses').get().total, 8 + names.length);
+      assert.ok(guests.every((row) => row.note === 'Recado original.' && row.updated_at === '2026-11-01'));
+      assert.equal(db.prepare('SELECT count(*) AS total FROM organizer_updates').get().total, 0);
+    } finally { db.close(); }
+  }
 });
 
 test('produção usa cookies Secure e limita tentativas de senha', async (t) => {
