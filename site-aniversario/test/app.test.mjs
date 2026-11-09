@@ -4,6 +4,7 @@ import { mkdtemp, mkdir, rm } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHmac } from 'node:crypto';
+import { DatabaseSync } from 'node:sqlite';
 import { createApp } from '../server.mjs';
 
 const qaRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../.qa');
@@ -12,9 +13,10 @@ const secret = 'segredo-exclusivo-dos-testes-0123456789';
 const post = (body, extra = {}) => ({ method: 'POST', headers: { 'Content-Type': 'application/json', ...extra }, body: JSON.stringify(body) });
 const cookieFrom = (response) => response.headers.get('set-cookie')?.split(';')[0];
 
-async function fixture(options = {}) {
+async function fixture(options = {}, prepare) {
   await mkdir(qaRoot, { recursive: true });
   const dataDir = await mkdtemp(resolve(qaRoot, 'integration-'));
+  if (prepare) await prepare(dataDir);
   const start = async () => {
     const app = await createApp({ dataDir, adminPassword: password, jwtSecret: secret, ...options });
     await new Promise((done) => app.server.listen(0, '127.0.0.1', done));
@@ -109,8 +111,8 @@ test('fluxo real de convidados, autenticação, DOCX e persistência', async (t)
     assert.equal(JSON.parse(Buffer.from(token.split('.')[0], 'base64url')).alg, 'HS256');
     const response = await request('/api/admin/responses', { headers: { Cookie: adminCookie } });
     const result = await response.json();
-    assert.equal(result.responses.length, 2);
-    assert.deepEqual(result.responses.map((r) => r.status).sort(), ['no', 'yes']);
+    assert.equal(result.responses.length, 10);
+    assert.deepEqual(result.responses.map((r) => r.status).sort(), ['no', ...Array(9).fill('yes')]);
     assert.ok(result.responses.some((r) => r.note === note));
     assert.ok(result.responses.every((r) => !('edit_hash' in r)));
   });
@@ -131,7 +133,7 @@ test('fluxo real de convidados, autenticação, DOCX e persistência', async (t)
     assert.ok(files.has('_rels/.rels'));
     const xml = files.get('word/document.xml');
     assert.match(xml, /<w:tbl>/);
-    assert.match(xml, /Vou: 1 \| Talvez: 0 \| Não vou: 1/);
+    assert.match(xml, /Vou: 9 \| Talvez: 0 \| Não vou: 1/);
     assert.ok(xml.includes('Ana &amp; João &lt;família&gt;'));
     assert.ok(xml.includes('Recado com &lt;símbolos&gt; &amp; acentos: coração!'));
   });
@@ -144,6 +146,63 @@ test('fluxo real de convidados, autenticação, DOCX e persistência', async (t)
     assert.equal((await request('/api/admin/logout', post({}, { Cookie: adminCookie }))).status, 200);
     assert.equal((await request('/api/admin/session', { headers: { Cookie: adminCookie } })).status, 401);
   });
+});
+
+test('família é incluída no banco existente e no DOCX sem duplicar ou alterar Maria, Ariane e Carlos neto', async (t) => {
+  const previousDate = '2026-11-01T12:00:00.000Z';
+  const mariaNote = 'Minha confirmação e meu recado original.';
+  const app = await fixture({}, (dataDir) => {
+    const db = new DatabaseSync(resolve(dataDir, 'responses.sqlite'));
+    try {
+      db.exec(`CREATE TABLE responses (
+        id TEXT PRIMARY KEY, edit_hash TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('yes','maybe','no')),
+        note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      ) STRICT`);
+      const insert = db.prepare('INSERT INTO responses VALUES (?, ?, ?, ?, ?, ?, ?)');
+      insert.run('existing-maria', 'private-maria-hash', 'Maria', 'yes', mariaNote, previousDate, previousDate);
+      insert.run('existing-carlos-neto', 'private-neto-hash', 'Carlos de Macedo (neto)', 'maybe', 'Decidindo.', previousDate, previousDate);
+      insert.run('existing-ariane', 'private-ariane-hash', 'Ariane', 'yes', 'Meu recado original.', previousDate, previousDate);
+    } finally { db.close(); }
+  });
+  t.after(() => app.close());
+  const request = (path, options) => fetch(app.url + path, options);
+  assert.equal((await request('/api/admin/responses')).status, 401);
+  assert.equal((await request('/lib/confirmed-guests.mjs')).status, 404);
+  const login = await request('/api/admin/login', post({ password }));
+  assert.equal(login.status, 200);
+  const headers = { Cookie: cookieFrom(login) };
+  const list = async () => (await (await request('/api/admin/responses', { headers })).json()).responses;
+  const before = await list();
+  assert.equal(before.length, 11);
+  for (const name of ['Tábata', 'Gabriel', 'Marcelo', 'Patrícia', 'Carlos de Macedo (pai)', 'Kalel', 'Elza', 'Neném']) {
+    const matches = before.filter((row) => row.name === name);
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].status, 'yes');
+    assert.match(matches[0].note, /confirmada pela Tábata/);
+  }
+  const maria = before.filter((row) => row.name === 'Maria');
+  assert.equal(maria.length, 1);
+  assert.equal(maria[0].id, 'existing-maria');
+  assert.equal(maria[0].note, mariaNote);
+  assert.equal(maria[0].updated_at, previousDate);
+  const ariane = before.filter((row) => row.name === 'Ariane');
+  assert.equal(ariane.length, 1);
+  assert.equal(ariane[0].id, 'existing-ariane');
+  assert.equal(ariane[0].status, 'yes');
+  assert.equal(ariane[0].note, 'Meu recado original.');
+  assert.equal(ariane[0].updated_at, previousDate);
+  assert.match(before.find((row) => row.name === 'Kalel').note, /Namorado da Ariane/);
+  assert.equal(before.find((row) => row.id === 'existing-carlos-neto').status, 'maybe');
+  await app.restart();
+  await app.restart();
+  assert.deepEqual(await list(), before);
+  const download = await request('/api/admin/export.docx', { headers });
+  assert.equal(download.status, 200);
+  const xml = unzipStored(Buffer.from(await download.arrayBuffer())).get('word/document.xml');
+  assert.match(xml, /Vou: 10 \| Talvez: 1 \| Não vou: 0/);
+  for (const row of before) assert.ok(xml.includes(row.name));
+  assert.ok(xml.includes(mariaNote));
 });
 
 test('produção usa cookies Secure e limita tentativas de senha', async (t) => {

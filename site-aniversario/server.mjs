@@ -7,6 +7,7 @@ import { promisify } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { DatabaseSync } from 'node:sqlite';
 import { createGuestDocx } from './lib/docx.mjs';
+import { registerConfirmedGuests } from './lib/confirmed-guests.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const scrypt = promisify(scryptCallback);
@@ -136,6 +137,7 @@ export async function createApp(options = {}) {
       note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
     ) STRICT;
     CREATE TABLE IF NOT EXISTS sessions (jti TEXT PRIMARY KEY, expires_at INTEGER NOT NULL) STRICT;`);
+  registerConfirmedGuests(db);
   if (passwordChanged) db.exec('DELETE FROM sessions');
 
   const cookie = (name, value, seconds) => `${name}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${seconds}${secure ? '; Secure' : ''}`;

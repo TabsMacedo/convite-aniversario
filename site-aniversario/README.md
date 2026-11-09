@@ -42,7 +42,9 @@ Ao voltar pelo mesmo navegador, a pessoa pode atualizar a resposta. A identifica
 
 ## Consultar e baixar as respostas
 
-Entre em `/admin` com sua senha. O painel mostra totais por resposta, nomes e observações, com busca, filtro e atualização manual. **Os totais contam respostas de convidados, não incluem automaticamente os familiares citados nos recados.**
+Entre em `/admin` com sua senha. O painel mostra totais por resposta, nomes e observações, com busca, filtro e atualização manual. **Os totais incluem as respostas dos convidados e as presenças registradas pela organizadora. Acompanhantes citados apenas nos recados não são somados automaticamente.**
+
+As presenças de **Tábata, Gabriel, Marcelo, Patrícia, Carlos de Macedo (pai), Kalel, Elza e Neném** são incluídas como **Vou** no início do servidor e também entram na exportação DOCX. Cada uma tem uma observação indicando a confirmação pela Tábata. Carlos de Macedo (pai) está identificado como o avô que acompanha Maria, e Kalel como o namorado que acompanha Ariane; os registros já existentes de Maria e Ariane permanecem intactos. Elza e Neném estão identificados como tia e tio da Tábata. Essas inclusões usam identificadores fixos no SQLite para não se repetirem ao reiniciar ou publicar novamente. A lista fica em `lib/confirmed-guests.mjs`, que não é servido publicamente. No Render, as presenças serão incluídas no banco persistente quando esta versão for publicada e iniciada; editar o código local não altera o banco hospedado.
 
 O botão **Baixar lista em DOCX** gera um documento Word com resumo e tabela de todas as respostas. O arquivo inclui as observações completas e a data de atualização. Busca e filtro na tela não limitam a exportação. Nenhum dado é enviado ao Word ou a outro serviço para gerar o arquivo.
 
