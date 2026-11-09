@@ -176,7 +176,7 @@ test('família é incluída no banco existente e no DOCX sem duplicar ou alterar
   const list = async () => (await (await request('/api/admin/responses', { headers })).json()).responses;
   const before = await list();
   assert.equal(before.length, 11);
-  for (const name of ['Tábata', 'Gabriel', 'Marcelo', 'Patrícia', 'Carlos de Macedo (pai)', 'Kalel', 'Elza', 'Neném']) {
+  for (const name of ['Tábata', 'Gabriel', 'Marcelo', 'Patrícia Macedo (mãe)', 'Carlos de Macedo (pai)', 'Kalel', 'Elza', 'Neném']) {
     const matches = before.filter((row) => row.name === name);
     assert.equal(matches.length, 1);
     assert.equal(matches[0].status, 'yes');
@@ -270,9 +270,49 @@ test('atualização de Elvis ignora nomes parecidos e homônimos sem editar seus
       const guests = db.prepare("SELECT * FROM responses WHERE id LIKE 'guest-%'").all();
       assert.equal(db.prepare('SELECT count(*) AS total FROM responses').get().total, 8 + names.length);
       assert.ok(guests.every((row) => row.note === 'Recado original.' && row.updated_at === '2026-11-01'));
-      assert.equal(db.prepare('SELECT count(*) AS total FROM organizer_updates').get().total, 0);
+      assert.equal(db.prepare("SELECT count(*) AS total FROM organizer_updates WHERE id = 'elvis-silva-family-v1'").get().total, 0);
     } finally { db.close(); }
   }
+});
+
+test('as duas Patrícias Macedo ficam identificadas sem mesclar presenças nem repetir o parentesco', async (t) => {
+  const auntId = '9094ecb0-a841-4bc8-b1d8-980ea36ec6a0';
+  const app = await fixture({}, (dataDir) => {
+    const db = new DatabaseSync(resolve(dataDir, 'responses.sqlite'));
+    try {
+      db.exec(`CREATE TABLE responses (
+        id TEXT PRIMARY KEY, edit_hash TEXT NOT NULL UNIQUE, name TEXT NOT NULL, status TEXT NOT NULL,
+        note TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      ) STRICT;
+      CREATE TABLE companion_overrides (response_id TEXT PRIMARY KEY, companions TEXT NOT NULL, note_snapshot TEXT NOT NULL) STRICT`);
+      const insert = db.prepare('INSERT INTO responses VALUES (?, ?, ?, ?, ?, ?, ?)');
+      insert.run('family-patricia', 'mother-hash', 'Patrícia', 'yes', 'Mãe da Tábata.', '2026-11-01', '2026-11-01');
+      insert.run(auntId, 'aunt-hash', 'Patrícia Macedo', 'yes', 'Recado original da tia.', '2026-11-01', '2026-11-01');
+      db.prepare('INSERT INTO companion_overrides VALUES (?, ?, ?)').run(auntId, '[]', 'Recado original da tia.');
+    } finally { db.close(); }
+  });
+  t.after(() => app.close());
+  const login = await fetch(app.url + '/api/admin/login', post({ password }));
+  const headers = { Cookie: cookieFrom(login) };
+  const list = async () => (await (await fetch(app.url + '/api/admin/responses', { headers })).json());
+  const before = await list();
+  const mother = before.responses.find((row) => row.id === 'family-patricia');
+  const aunt = before.responses.find((row) => row.id === auntId);
+  assert.equal(mother.name, 'Patrícia Macedo (mãe)');
+  assert.equal(aunt.name, 'Patrícia Macedo (tia)');
+  assert.equal(mother.status, 'yes');
+  assert.equal(aunt.status, 'yes');
+  assert.equal(mother.note, 'Mãe da Tábata.');
+  assert.ok(aunt.note.startsWith('Recado original da tia.\n\n'));
+  assert.match(aunt.note, /irmã do Marcelo/);
+  assert.equal(aunt.needs_review, false);
+  assert.equal(before.totals.yes, 9);
+  await app.restart();
+  assert.deepEqual(await list(), before);
+  const response = await fetch(app.url + '/api/admin/export.docx', { headers });
+  const xml = unzipStored(Buffer.from(await response.arrayBuffer())).get('word/document.xml');
+  assert.ok(xml.includes('Patrícia Macedo (mãe)'));
+  assert.ok(xml.includes('Patrícia Macedo (tia)'));
 });
 
 test('conferência de acompanhantes exige login, persiste e sinaliza alterações no recado', async (t) => {
