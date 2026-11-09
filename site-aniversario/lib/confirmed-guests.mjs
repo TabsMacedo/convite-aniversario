@@ -14,6 +14,7 @@ const confirmedGuests = [
 ];
 
 const elvisFamilyUpdate = 'elvis-silva-family-v1';
+const elvisFamilyClarification = 'Complemento da Tábata: Elvis Silva vem com a esposa Joyce e a filha Pietra. São 3 pessoas, incluindo Elvis. As 2 acompanhantes já estão cadastradas individualmente e incluídas nos totais; não somar novamente.';
 const normalizeName = (value) => value.normalize('NFC').trim().replace(/\s+/gu, ' ').toLocaleLowerCase('pt-BR');
 
 function registerElvisFamily(db, insert, now) {
@@ -27,16 +28,36 @@ function registerElvisFamily(db, insert, now) {
   const companions = [
     ['family-elvis-silva-joyce', 'Joyce', 'Esposa do Elvis Silva.'],
     ['family-elvis-silva-pietra', 'Pietra', 'Filha do Elvis Silva.'],
-    ['family-elvis-silva-namorado-pietra', 'Namorado da Pietra', 'Namorado da Pietra, filha do Elvis Silva. Nome ainda não informado.'],
   ];
   for (const [id, name, relationship] of companions) {
     const editHash = createHash('sha256').update(randomBytes(32)).digest('hex');
     insert.run(id, editHash, name, `${relationship} Acompanha Elvis Silva. Presença confirmada pela Tábata.`, now, now);
   }
-  const clarification = 'Complemento da Tábata: Elvis Silva vem com a esposa Joyce, a filha Pietra e o namorado da Pietra (nome ainda não informado). São 4 pessoas, incluindo Elvis. Os 3 acompanhantes já estão cadastrados individualmente e incluídos nos totais; não somar novamente.';
-  const note = [elvis.note, clarification].filter(Boolean).join('\n\n');
+  const note = [elvis.note, elvisFamilyClarification].filter(Boolean).join('\n\n');
   db.prepare('UPDATE responses SET note = ?, updated_at = ? WHERE id = ?').run(note, now, elvis.id);
   db.prepare('INSERT INTO organizer_updates VALUES (?, ?)').run(elvisFamilyUpdate, now);
+}
+
+function removePietraBoyfriend(db, now) {
+  const update = 'elvis-remove-pietra-boyfriend-v1';
+  if (db.prepare('SELECT id FROM organizer_updates WHERE id = ?').get(update)) return;
+  const matches = db.prepare('SELECT id, name, note FROM responses').all().filter((row) => normalizeName(row.name) === 'elvis silva');
+  if (matches.length !== 1) return;
+  const elvis = matches[0];
+  const removedId = 'family-elvis-silva-namorado-pietra';
+  db.prepare('DELETE FROM companion_overrides WHERE response_id = ?').run(removedId);
+  db.prepare('DELETE FROM responses WHERE id = ?').run(removedId);
+  const oldClarification = 'Complemento da Tábata: Elvis Silva vem com a esposa Joyce, a filha Pietra e o namorado da Pietra (nome ainda não informado). São 4 pessoas, incluindo Elvis. Os 3 acompanhantes já estão cadastrados individualmente e incluídos nos totais; não somar novamente.';
+  const originalNote = elvis.note.replace(oldClarification, '').replace(elvisFamilyClarification, '').trim();
+  const note = [originalNote, elvisFamilyClarification].filter(Boolean).join('\n\n');
+  db.prepare('UPDATE responses SET note = ?, updated_at = ? WHERE id = ?').run(note, now, elvis.id);
+  const override = db.prepare('SELECT companions, note_snapshot FROM companion_overrides WHERE response_id = ?').get(elvis.id);
+  if (override) {
+    const companions = JSON.parse(override.companions).filter((name) => normalizeName(name) !== 'namorado da pietra');
+    db.prepare('UPDATE companion_overrides SET companions = ?, note_snapshot = ? WHERE response_id = ?')
+      .run(JSON.stringify(companions), override.note_snapshot === elvis.note ? note : override.note_snapshot, elvis.id);
+  }
+  db.prepare('INSERT INTO organizer_updates VALUES (?, ?)').run(update, now);
 }
 
 function identifyPatricias(db, now) {
@@ -75,6 +96,7 @@ export function registerConfirmedGuests(db) {
       insert.run(id, editHash, name, note, now, now);
     }
     registerElvisFamily(db, insert, now);
+    removePietraBoyfriend(db, now);
     identifyPatricias(db, now);
     db.exec('COMMIT');
   } catch (error) {

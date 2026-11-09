@@ -85,7 +85,6 @@ const fixedLinks = [
   ['family-kalel', 'Ariane', 'partner'],
   ['family-elvis-silva-joyce', 'Elvis Silva', 'partner'],
   ['family-elvis-silva-pietra', 'Elvis Silva', 'child'],
-  ['family-elvis-silva-namorado-pietra', 'Elvis Silva', 'relative'],
 ];
 
 export function expandCompanions(responses, overrides = []) {

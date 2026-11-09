@@ -222,16 +222,16 @@ test('acompanhantes do Elvis entram nos totais e no DOCX e o recado é complemen
   assert.equal(original.note, originalNote);
   await app.restart();
   const after = await list();
-  assert.equal(after.length, 12);
+  assert.equal(after.length, 11);
   const elvis = after.find((row) => row.id === original.id);
   assert.equal(elvis.name, original.name);
   assert.equal(elvis.created_at, original.created_at);
   assert.equal(elvis.status, 'yes');
   assert.ok(elvis.note.startsWith(originalNote + '\n\n'));
-  assert.match(elvis.note, /esposa Joyce, a filha Pietra e o namorado da Pietra/);
-  assert.match(elvis.note, /4 pessoas, incluindo Elvis/);
+  assert.match(elvis.note, /esposa Joyce e a filha Pietra/);
+  assert.match(elvis.note, /3 pessoas, incluindo Elvis/);
   assert.match(elvis.note, /não somar novamente/);
-  for (const name of ['Joyce', 'Pietra', 'Namorado da Pietra']) {
+  for (const name of ['Joyce', 'Pietra']) {
     const matches = after.filter((row) => row.name === name);
     assert.equal(matches.length, 1);
     assert.equal(matches[0].status, 'yes');
@@ -242,8 +242,9 @@ test('acompanhantes do Elvis entram nos totais e no DOCX e o recado é complemen
   const download = await request('/api/admin/export.docx', { headers });
   assert.equal(download.status, 200);
   const xml = unzipStored(Buffer.from(await download.arrayBuffer())).get('word/document.xml');
-  assert.match(xml, /Vou: 12 \| Talvez: 0 \| Não vou: 0/);
-  for (const name of ['Elvis Silva', 'Joyce', 'Pietra', 'Namorado da Pietra']) assert.ok(xml.includes(name));
+  assert.match(xml, /Vou: 11 \| Talvez: 0 \| Não vou: 0/);
+  for (const name of ['Elvis Silva', 'Joyce', 'Pietra']) assert.ok(xml.includes(name));
+  assert.ok(!xml.includes('Namorado da Pietra'));
   assert.ok(xml.includes(originalNote));
   // O cookie original continua permitindo que Elvis atualize sua própria resposta.
   const editedNote = 'Nova observação do Elvis.';
@@ -251,8 +252,53 @@ test('acompanhantes do Elvis entram nos totais e no DOCX e o recado é complemen
   assert.equal(update.status, 200);
   await app.restart();
   const edited = await list();
-  assert.equal(edited.length, 12);
+  assert.equal(edited.length, 11);
   assert.equal(edited.find((row) => row.id === original.id).note, editedNote);
+});
+
+test('retirada do namorado da Pietra corrige um banco antigo e não o recria no reinício', async (t) => {
+  const oldNote = 'Estarei presente com minha família\n\nComplemento da Tábata: Elvis Silva vem com a esposa Joyce, a filha Pietra e o namorado da Pietra (nome ainda não informado). São 4 pessoas, incluindo Elvis. Os 3 acompanhantes já estão cadastrados individualmente e incluídos nos totais; não somar novamente.';
+  const app = await fixture({}, (dataDir) => {
+    const db = new DatabaseSync(resolve(dataDir, 'responses.sqlite'));
+    try {
+      db.exec(`CREATE TABLE responses (
+        id TEXT PRIMARY KEY, edit_hash TEXT NOT NULL UNIQUE, name TEXT NOT NULL, status TEXT NOT NULL,
+        note TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      ) STRICT;
+      CREATE TABLE organizer_updates (id TEXT PRIMARY KEY, applied_at TEXT NOT NULL) STRICT;
+      CREATE TABLE companion_overrides (response_id TEXT PRIMARY KEY, companions TEXT NOT NULL, note_snapshot TEXT NOT NULL) STRICT`);
+      const insert = db.prepare('INSERT INTO responses VALUES (?, ?, ?, ?, ?, ?, ?)');
+      for (const [id, name, note] of [
+        ['elvis', 'Elvis Silva', oldNote],
+        ['family-elvis-silva-joyce', 'Joyce', 'Esposa do Elvis Silva.'],
+        ['family-elvis-silva-pietra', 'Pietra', 'Filha do Elvis Silva.'],
+        ['family-elvis-silva-namorado-pietra', 'Namorado da Pietra', 'Acompanha Elvis Silva.'],
+      ]) insert.run(id, `hash-${id}`, name, 'yes', note, '2026-11-01', '2026-11-01');
+      db.prepare('INSERT INTO organizer_updates VALUES (?, ?)').run('elvis-silva-family-v1', '2026-11-01');
+      db.prepare('INSERT INTO companion_overrides VALUES (?, ?, ?)').run('elvis', '["Namorado da Pietra"]', oldNote);
+      db.prepare('INSERT INTO companion_overrides VALUES (?, ?, ?)').run('family-elvis-silva-namorado-pietra', '[]', 'Acompanha Elvis Silva.');
+    } finally { db.close(); }
+  });
+  t.after(() => app.close());
+  const login = await fetch(app.url + '/api/admin/login', post({ password }));
+  const headers = { Cookie: cookieFrom(login) };
+  const list = async () => (await (await fetch(app.url + '/api/admin/responses', { headers })).json());
+  const before = await list();
+  const elvis = before.responses.find((row) => row.id === 'elvis');
+  assert.equal(before.totals.yes, 11);
+  assert.equal(elvis.group_size, 3);
+  assert.equal(elvis.needs_review, false);
+  assert.ok(elvis.note.startsWith('Estarei presente com minha família\n\n'));
+  assert.match(elvis.note, /São 3 pessoas/);
+  assert.ok(!elvis.note.includes('namorado'));
+  assert.deepEqual(elvis.registered_companions, ['Joyce', 'Pietra']);
+  assert.ok(before.responses.every((row) => row.id !== 'family-elvis-silva-namorado-pietra' && row.name !== 'Namorado da Pietra'));
+  await app.restart();
+  assert.deepEqual(await list(), before);
+  const download = await fetch(app.url + '/api/admin/export.docx', { headers });
+  const xml = unzipStored(Buffer.from(await download.arrayBuffer())).get('word/document.xml');
+  assert.match(xml, /Vou: 11 \| Talvez: 0 \| Não vou: 0/);
+  assert.ok(!xml.includes('Namorado da Pietra'));
 });
 
 test('atualização de Elvis ignora nomes parecidos e homônimos sem editar seus recados', () => {
