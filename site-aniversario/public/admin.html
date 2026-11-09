@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#203963">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Confirmações · Tábata's party</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="/js/admin.js" defer></script>
+</head>
+<body class="admin-body">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <header class="site-header"><a class="wordmark" href="/" aria-label="Tábata's party, início">Tábata's<span>party</span></a><a class="text-link" href="/">Ver convite <span aria-hidden="true">↗</span></a></header>
+  <main id="conteudo" class="container admin-main">
+    <p id="initial-loading" class="small-note" role="status">Preparando sua área…</p>
+    <section id="login-section" class="login-section" aria-labelledby="login-title" hidden>
+      <span class="paper-label">SÓ VOCÊ POR AQUI ♡</span><h1 id="login-title">Oi, Tábata!</h1><p>Entre para ver quem vem comemorar com você.</p>
+      <form id="login-form" class="form-card" method="post" action="/api/admin/login">
+        <label for="password">Sua senha</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required><button id="toggle-password" type="button" aria-controls="password" aria-pressed="false">Mostrar</button></div>
+        <button class="button button-pink button-full" id="login-button" type="submit">Entrar na minha área <span aria-hidden="true">↗</span></button>
+        <p id="login-message" class="notice notice-error" role="status" aria-live="polite" hidden></p>
+      </form>
+      <p class="small-note">Sua senha é definida na instalação do site. As respostas ficam protegidas.</p>
+    </section>
+
+    <section id="dashboard" aria-labelledby="dashboard-title" hidden>
+      <div class="dashboard-heading"><div><p class="eyebrow">30 JAN 2027 · VAI TER FESTA!</p><h1 id="dashboard-title">Sua lista de convidados.</h1><p>As respostas e os recadinhos, todos aqui.</p></div><button id="logout" class="button button-outline" type="button">Sair da minha área</button></div>
+      <div class="stats-grid" aria-label="Resumo das respostas">
+        <div class="stat stat-yes"><span>Vou</span><strong id="count-yes">0</strong><small>confirmados</small></div>
+        <div class="stat stat-maybe"><span>Talvez</span><strong id="count-maybe">0</strong><small>ainda vão decidir</small></div>
+        <div class="stat stat-no"><span>Não vou</span><strong id="count-no">0</strong><small>avisaram que não vão</small></div>
+        <div class="stat stat-total"><span>Total</span><strong id="count-total">0</strong><small>respostas recebidas</small></div>
+      </div>
+      <p class="count-explanation">Os números contam respostas de convidados. Confira nas observações quem avisou que levará a família e considere o cônjuge e os filhos à parte.</p>
+      <div class="dashboard-actions"><div><button class="button button-pink" id="download" type="button">Baixar lista em DOCX <span aria-hidden="true">↓</span></button><button class="button button-outline" id="refresh" type="button">Atualizar lista <span aria-hidden="true">↻</span></button></div><p id="updated-at" class="small-note"></p></div>
+      <p id="dashboard-message" class="notice" role="status" aria-live="polite" hidden></p>
+      <div class="response-panel">
+        <div class="filters"><div><label for="search">Procurar por nome ou recado</label><input id="search" type="search" placeholder="Digite para procurar…" autocomplete="off"></div><div><label for="filter">Mostrar respostas</label><select id="filter"><option value="all">Todas as respostas</option><option value="yes">Vou</option><option value="maybe">Talvez</option><option value="no">Não vou</option></select></div></div>
+        <p id="list-summary" class="small-note" role="status" aria-live="polite"></p>
+        <div class="table-wrap"><table class="response-table"><caption class="sr-only">Nomes, respostas, observações e data da última atualização</caption><thead><tr><th scope="col">Convidado(a)</th><th scope="col">Resposta</th><th scope="col">Observação</th><th scope="col">Atualização</th></tr></thead><tbody id="response-list"></tbody></table></div>
+        <p id="empty-list" class="empty-state" hidden>Nenhuma resposta por aqui ainda. Assim que alguém responder, vai aparecer nesta lista. ♡</p>
+      </div>
+      <p class="small-note export-note">O documento DOCX inclui todas as respostas e observações, mesmo quando há um filtro na tela. Você pode abri-lo no Word ou em outro editor compatível.</p>
+    </section>
+    <noscript><p class="notice notice-error">Ative o JavaScript no navegador para entrar e consultar as respostas.</p></noscript>
+  </main>
+  <footer class="admin-footer container"><span>Com carinho e organização. ♡</span><a href="/">Voltar ao convite</a></footer>
+</body>
+</html>

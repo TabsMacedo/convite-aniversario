@@ -1,0 +1,51 @@
+:root {
+  /* Paleta neon: jeans como base, pink elétrico e amarelo fluorescente. */
+  --cor-jeans: #203963;
+  --cor-jeans-escuro: #101a30;
+  --cor-jeans-claro: #577fad;
+  --cor-jeans-reflexo: #315780;
+  --cor-pink: #ff008c;
+  --cor-pink-escuro: #bf005f;
+  --cor-amarelo: #f5ff00;
+  --cor-azul: #00c8ff;
+  --cor-roxo: #a13dff;
+  --cor-rosa: #ff65bc;
+  --cor-rosa-claro: #ffe4f3;
+  --cor-azul-claro: #daf5ff;
+  --cor-fundo: #fffefd;
+  --cor-papel: #ffffff;
+  --cor-fundo-painel: #f2f4fa;
+  --cor-texto: #111a2e;
+  --cor-texto-claro: #e7f0ff;
+  --cor-suave: #566176;
+  --cor-linha: #d8dce4;
+  --cor-borda-bilhete: #a3aec0;
+  --cor-borda-campo: #8c98ad;
+  --cor-fita: rgb(255 255 255 / 65%);
+  --cor-fita-borda: rgb(185 201 223 / 40%);
+  /* Tema noturno da festa: contraste com jeans e detalhes neon. */
+  --cor-noite: #080d17;
+  --cor-superficie-noturna: #132039;
+  --cor-campo-noturno: #0c1525;
+  --cor-texto-noturno: #f1f4ff;
+  --cor-suave-noturno: #b6c4da;
+  --cor-linha-noturna: #475b7a;
+  --cor-papel-recorte: #eee6d6;
+  --cor-overlay-jeans: rgb(8 13 23 / 80%);
+  --cor-overlay-jeans-claro: rgb(8 13 23 / 44%);
+  --cor-overlay-jeans-fundo: rgb(8 13 23 / 94%);
+  --cor-sucesso: #24573e;
+  --cor-sucesso-fundo: #edf8f0;
+  --cor-erro: #942943;
+  --cor-erro-fundo: #fff0f2;
+  /* Reflexos dos adesivos de strass, cromados e do globo espelhado. */
+  --cor-metal-sombra: #485776;
+  --cor-metal-meio: #b9c9df;
+  --cor-metal-luz: #ffffff;
+  --fonte-texto: Arial, Helvetica, sans-serif;
+  --fonte-editorial: Georgia, 'Times New Roman', serif;
+  --fonte-mono: 'Courier New', monospace;
+  --largura-conteudo: 1120px;
+  --raio: 8px;
+  --sombra-recorte: 5px 6px 0 rgb(20 39 65 / 17%);
+}

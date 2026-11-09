@@ -1,0 +1,53 @@
+/* O tema escuro de theme-y2k.css é o padrão. A escolha clara é explícita. */
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 10px; flex-shrink: 0; border: 1px solid var(--cor-linha-noturna); border-radius: 50%; background: var(--cor-superficie-noturna); color: var(--cor-amarelo); }
+.theme-toggle svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle .theme-moon { display: none; }
+:root[data-theme="light"] .theme-toggle .theme-sun { display: none; }
+:root[data-theme="light"] .theme-toggle .theme-moon { display: block; }
+:root[data-theme="light"] .theme-toggle { background: var(--cor-papel); color: var(--cor-jeans); border-color: var(--cor-borda-campo); }
+
+:root[data-theme="light"] .party-page { color-scheme: light; background: var(--cor-fundo); color: var(--cor-texto); }
+:root[data-theme="light"] .party-page .site-header { background: var(--cor-fundo); border-color: var(--cor-linha); }
+:root[data-theme="light"] .party-page .wordmark { color: var(--cor-jeans); }
+:root[data-theme="light"] .party-page .wordmark span { color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .party-page .section-intro > p:last-child,
+:root[data-theme="light"] .party-page .small-note,
+:root[data-theme="light"] .party-page .detail p { color: var(--cor-suave); }
+:root[data-theme="light"] .party-page .section-intro h2 em,
+:root[data-theme="light"] .party-page .detail-number,
+:root[data-theme="light"] .party-page .text-link { color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .party-page .detail,
+:root[data-theme="light"] .party-page .detail:last-child { border-color: var(--cor-linha); }
+:root[data-theme="light"] .party-page .detail p strong { color: var(--cor-texto); }
+:root[data-theme="light"] .party-page .party-section .eyebrow,
+:root[data-theme="light"] .party-page .bring-section .section-heading .eyebrow { color: var(--cor-jeans); }
+:root[data-theme="light"] .party-page .bring-section { background: var(--cor-fundo-painel); color: var(--cor-texto); border-color: var(--cor-linha); }
+:root[data-theme="light"] .party-page .note-card { box-shadow: var(--sombra-recorte); }
+:root[data-theme="light"] .party-page .guest-note .icon { color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .party-page .form-card { background: var(--cor-papel); border-color: var(--cor-linha); border-top-color: var(--cor-pink); box-shadow: 0 8px 30px rgb(20 39 65 / 8%); }
+:root[data-theme="light"] .party-page input:not([type=radio]),
+:root[data-theme="light"] .party-page textarea { background: var(--cor-fundo); color: var(--cor-texto); border-color: var(--cor-borda-campo); }
+:root[data-theme="light"] .party-page input::placeholder,
+:root[data-theme="light"] .party-page textarea::placeholder,
+:root[data-theme="light"] .party-page .required-hint,
+:root[data-theme="light"] .party-page .field-help,
+:root[data-theme="light"] .party-page .form-privacy { color: var(--cor-suave); }
+:root[data-theme="light"] .party-page .response-option > span { background: var(--cor-papel); border-color: var(--cor-borda-campo); }
+:root[data-theme="light"] .party-page .response-option small { color: var(--cor-suave); }
+:root[data-theme="light"] .party-page .response-option input { accent-color: var(--cor-jeans-escuro); }
+:root[data-theme="light"] .party-page .response-option input:checked + span { background: var(--cor-pink); border-color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .party-page .response-option input:checked + span small { color: var(--cor-texto); }
+:root[data-theme="light"] .party-page .option-symbol { color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .party-page .response-option input:checked + span .option-symbol { color: var(--cor-texto); }
+:root[data-theme="light"] .party-page :focus-visible,
+:root[data-theme="light"] .party-page .response-option input:focus-visible + span { outline-color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .party-page .organizer-link { color: var(--cor-suave); }
+
+@media (max-width: 479px) {
+  /* O botão de presença ganha sua própria linha para os controles não se apertarem. */
+  .party-page .site-header { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 10px 12px; }
+  .party-page .site-header > .wordmark { grid-column: 1; grid-row: 1; justify-self: start; }
+  .party-page .site-header nav { display: contents; }
+  .party-page .theme-toggle { grid-column: 2; grid-row: 1; }
+  .party-page .site-header .button-small { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+}

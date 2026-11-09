@@ -1,0 +1,63 @@
+/* Adesivos anos 2000. A biblioteca SVG fica no HTML e não faz novas requisições. */
+.y2k-icon { display: block; flex-shrink: 0; pointer-events: none; overflow: visible; }
+.metal-light { stop-color: var(--cor-metal-luz); }
+.metal-mid { stop-color: var(--cor-metal-meio); }
+.metal-dark { stop-color: var(--cor-metal-sombra); }
+.pink-light { stop-color: var(--cor-rosa); }
+.pink-mid { stop-color: var(--cor-pink); }
+.pink-dark { stop-color: var(--cor-pink-escuro); }
+.lens-blue { stop-color: var(--cor-jeans); }
+.lens-pink { stop-color: var(--cor-pink-escuro); }
+.mirror-light, .rhinestones { fill: var(--cor-metal-luz); }
+.mirror-mid { fill: var(--cor-metal-meio); }
+.mirror-dark { fill: var(--cor-metal-sombra); }
+.mirror-blue { fill: var(--cor-jeans-claro); }
+.sticker-edge { stroke: var(--cor-metal-luz); stroke-width: 4; stroke-linejoin: round; }
+.star-facet { fill: var(--cor-jeans-escuro); opacity: .2; }
+.star-shine { stroke: var(--cor-metal-luz); stroke-width: 3; stroke-linecap: round; fill: none; opacity: .85; }
+.icon-glint { fill: var(--cor-metal-luz); stroke: var(--cor-metal-meio); stroke-width: .5; }
+.glint-secondary { opacity: .85; }
+.glasses-arm, .glasses-bridge { stroke: url(#y2k-chrome); stroke-width: 7; stroke-linecap: round; fill: none; }
+.glasses-sticker { stroke: var(--cor-metal-luz); stroke-width: 13; stroke-linejoin: round; }
+.glasses-frame { fill: url(#y2k-lenses); stroke: url(#y2k-pink); stroke-width: 7; stroke-linejoin: round; }
+.lens-reflection { fill: var(--cor-metal-luz); opacity: .45; }
+.disco-string { fill: none; stroke: var(--cor-metal-meio); stroke-width: 2; }
+.disco-cap { fill: url(#y2k-chrome); stroke: var(--cor-metal-luz); stroke-width: 1.5; }
+.disco-grid { fill: none; stroke: var(--cor-metal-sombra); stroke-width: 1.5; opacity: .5; }
+.sparkle-yellow { fill: var(--cor-amarelo); }
+.sparkle-pink { fill: var(--cor-pink); }
+.sparkle-blue { fill: var(--cor-azul); }
+.sparkle-center { fill: var(--cor-rosa); }
+.note-pink .sparkle-pink { fill: var(--cor-jeans-escuro); }
+
+.hero-accessories { display: flex; align-items: center; gap: 16px; margin: 20px 0 -8px; width: fit-content; max-width: 100%; }
+.accessory-glasses { width: 120px; height: 75px; transform: rotate(-13deg); filter: drop-shadow(3px 5px 0 rgb(0 0 0 / 22%)); }
+.accessory-star { width: 56px; height: 56px; transform: rotate(14deg); filter: drop-shadow(2px 4px 0 rgb(0 0 0 / 18%)); }
+.accessory-caption { font: italic 20px/1.1 var(--fonte-editorial); color: var(--cor-amarelo); transform: rotate(-6deg); }
+.ticket-disco { position: absolute; z-index: 3; width: 116px; height: 116px; top: -78px; right: -7px; transform: rotate(12deg); filter: drop-shadow(3px 5px 1px rgb(0 0 0 / 20%)); }
+.ticket-chrome-star { position: absolute; z-index: 2; width: 94px; height: 94px; left: -15px; bottom: -11px; transform: rotate(-16deg); filter: drop-shadow(3px 4px 0 rgb(0 0 0 / 20%)); }
+.hero-art { margin-top: 65px; }
+.note-glasses { position: absolute; top: -12px; right: 12px; width: 100px; height: 63px; transform: rotate(13deg); filter: drop-shadow(2px 3px 0 rgb(20 39 65 / 17%)); }
+.note-sparkles { position: absolute; top: 8px; right: 13px; width: 51px; height: 51px; transform: rotate(9deg); }
+.rsvp-sparkle { position: absolute; width: 65px; height: 65px; right: 0; top: 0; transform: rotate(10deg); filter: drop-shadow(2px 3px 0 rgb(20 39 65 / 12%)); }
+.closing-accessories { display: flex; align-items: center; justify-content: center; gap: 23px; margin: 22px 0 -8px; }
+.closing-accessories > svg { width: 62px; height: 62px; }
+.closing-accessories > svg:first-child { width: 45px; height: 45px; transform: rotate(-15deg); }
+.closing-accessories > svg:last-child { width: 85px; height: 54px; transform: rotate(12deg); }
+
+@media (min-width: 700px) {
+  .hero-art { margin-top: 20px; }
+  .hero-accessories { gap: 20px; margin-top: 22px; }
+  .accessory-glasses { width: 135px; height: 84px; }
+  .accessory-star { width: 62px; height: 62px; }
+  .ticket-disco { width: 140px; height: 140px; right: -23px; top: -95px; }
+  .note-glasses { width: 115px; height: 72px; top: -20px; right: 20px; }
+}
+@media (max-width: 359px) {
+  .hero-accessories { gap: 12px; }
+  .accessory-glasses { width: 110px; height: 69px; }
+  .accessory-star { width: 48px; height: 48px; }
+  .accessory-caption { font-size: 18px; }
+  .ticket-disco { width: 105px; height: 105px; top: -75px; }
+  .note-glasses { width: 85px; height: 54px; }
+}

@@ -1,0 +1,20 @@
+# Pacotes de entrega gerados localmente.
+/*.zip
+
+# Credenciais e configurações locais; o modelo pode ser versionado.
+**/.env
+**/.env.*
+!**/.env.example
+
+# Respostas dos convidados, banco de dados e sessões.
+**/data/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Dependências, verificações temporárias e logs.
+**/node_modules/
+**/.qa/
+**/coverage/
+*.log

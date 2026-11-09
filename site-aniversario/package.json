@@ -1,0 +1,12 @@
+{
+  "name": "aniversario-tabata",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Convite e confirmação de presença de Tábata's party",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --experimental-sqlite server.mjs",
+    "test": "node --experimental-sqlite --test test/*.test.mjs"
+  }
+}

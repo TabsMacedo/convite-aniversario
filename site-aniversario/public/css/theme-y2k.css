@@ -1,0 +1,57 @@
+/* A festa recebe o tema noturno; as cores dos recortes continuam neon. */
+.party-page { color-scheme: dark; background-color: var(--cor-noite); background-image: linear-gradient(var(--cor-overlay-jeans-fundo), var(--cor-overlay-jeans-fundo)), url('/images/jeans-colagem.jpg'); background-size: auto, 543px auto; color: var(--cor-texto-noturno); }
+.party-page .site-header { background: var(--cor-noite); border-bottom: 1px dashed var(--cor-linha-noturna); }
+.party-page .wordmark { color: var(--cor-texto-noturno); }
+.party-page .wordmark span { color: var(--cor-pink); }
+.party-page .denim { background-color: var(--cor-noite); background-image: linear-gradient(105deg, var(--cor-overlay-jeans), var(--cor-overlay-jeans-claro)), url('/images/jeans-colagem.jpg'); background-size: auto, 600px auto; background-position: center; background-repeat: no-repeat, repeat; }
+.party-page .hero::before, .party-page .hero::after { border-color: var(--cor-metal-meio); opacity: .45; }
+.party-page .hero-inner { padding-top: 46px; }
+.party-page .eyebrow { color: var(--cor-amarelo); }
+.party-page .eyebrow.light { color: var(--cor-texto-noturno); }
+.party-page .name-collage { gap: 13px; }
+.party-page .name-collage > .name-cutouts { display: inline-flex; align-items: center; gap: 3px; padding: 0; background: none; box-shadow: none; font-size: clamp(38px, 10vw, 68px); transform: none; }
+.name-cutouts b { display: block; padding: 3px 5px 7px; background: var(--cor-pink); color: var(--cor-jeans-escuro); transform: rotate(-5deg); box-shadow: 2px 4px 0 rgb(0 0 0 / 35%); }
+.name-cutouts b:nth-child(2n) { background: var(--cor-papel-recorte); color: var(--cor-jeans); transform: rotate(5deg) translateY(3px); }
+.name-cutouts b:nth-child(3n) { background: var(--cor-jeans-reflexo); color: var(--cor-rosa); transform: rotate(-3deg); }
+.party-page .party-script { color: var(--cor-texto-noturno); }
+.party-page .hero-art { isolation: isolate; margin-bottom: 40px; }
+.ticket-heading { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 24px; }
+.ticket-heading .sticker-pink { position: relative; top: auto; left: auto; padding: 8px 12px; font-size: clamp(15px, 4vw, 19px); white-space: nowrap; transform: rotate(-8deg); }
+.ticket-heading .ticket-disco { position: relative; top: auto; right: auto; width: 72px; height: 72px; flex-shrink: 0; }
+.news-scrap { position: absolute; z-index: -1; width: 123%; max-width: none; height: auto; top: -8%; left: -19%; transform: rotate(-15deg); clip-path: polygon(69% 3%,81% 10%,97% 68%,83% 70%,79% 74%,65% 72%,52% 76%,45% 73%,38% 75%,29% 86%,28% 98%,22% 93%,18% 81%,18% 75%,26% 54%,36% 28%,62% 19%,67% 11%); pointer-events: none; }
+.party-page .date-ticket { background: var(--cor-superficie-noturna); color: var(--cor-texto-noturno); border: 1px solid var(--cor-metal-meio); box-shadow: 8px 10px 0 rgb(0 0 0 / 45%); }
+.party-page .date-ticket::before, .party-page .ticket-bottom { border-color: var(--cor-linha-noturna); }
+.party-page .ticket-kicker { color: var(--cor-suave-noturno); }
+.party-page .ticket-day { color: var(--cor-papel-recorte); }
+.photo-disco { object-fit: contain; clip-path: circle(45% at 49% 50%); pointer-events: none; }
+.crystal-flower { position: absolute; z-index: 3; width: 81px; height: auto; right: -20px; top: 43%; transform: rotate(17deg); clip-path: polygon(36% 12%,56% 11%,67% 23%,85% 19%,95% 37%,88% 52%,96% 68%,83% 85%,62% 87%,47% 95%,28% 86%,14% 68%,19% 48%,13% 35%,22% 19%); pointer-events: none; }
+.party-page .section-intro > p:last-child, .party-page .small-note, .party-page .detail p { color: var(--cor-suave-noturno); }
+.party-page .section-intro h2 em { color: var(--cor-rosa); }
+.party-page .detail, .party-page .detail:last-child { border-color: var(--cor-linha-noturna); }
+.party-page .detail p strong { color: var(--cor-texto-noturno); }
+.party-page .detail-number, .party-page .text-link { color: var(--cor-pink); }
+.party-page .bring-section { background: var(--cor-noite); color: var(--cor-texto-noturno); border-block-style: dashed; border-color: var(--cor-linha-noturna); }
+.party-page .note-card .eyebrow { color: var(--cor-texto); }
+.party-page .note-card { box-shadow: 6px 7px 0 var(--cor-superficie-noturna); }
+.party-page .paper-label { color: var(--cor-texto); }
+.party-page .form-card { background: var(--cor-superficie-noturna); border-color: var(--cor-linha-noturna); border-top-color: var(--cor-pink); box-shadow: 7px 8px 0 rgb(0 0 0 / 25%); }
+.party-page input:not([type=radio]), .party-page textarea { background: var(--cor-campo-noturno); color: var(--cor-texto-noturno); border-color: var(--cor-linha-noturna); }
+.party-page input::placeholder, .party-page textarea::placeholder, .party-page .required-hint, .party-page .field-help, .party-page .form-privacy { color: var(--cor-suave-noturno); }
+.party-page .response-option > span { background: var(--cor-campo-noturno); border-color: var(--cor-linha-noturna); }
+.party-page .response-option small { color: var(--cor-suave-noturno); }
+.party-page .option-symbol { color: var(--cor-rosa); }
+.party-page .response-option input { accent-color: var(--cor-amarelo); }
+.party-page .response-option input:checked + span { background: var(--cor-pink); border-color: var(--cor-rosa); color: var(--cor-texto); }
+.party-page .response-option input:checked + span small, .party-page .response-option input:checked + span .option-symbol { color: var(--cor-texto); }
+.party-page :focus-visible, .party-page .response-option input:focus-visible + span { outline-color: var(--cor-amarelo); }
+.party-page .closing { border-block: 1px dashed var(--cor-linha-noturna); }
+.kiss-sticker { display: block; width: 104px; height: auto; transform: rotate(-9deg); filter: drop-shadow(2px 4px 2px rgb(0 0 0 / 35%)); }
+.party-page .organizer-link { color: var(--cor-suave-noturno); }
+.party-page .skip-link { background: var(--cor-pink); color: var(--cor-jeans-escuro); }
+@media (min-width: 700px) {
+  .party-page .hero-inner { padding-top: 70px; }
+  .party-page .hero-art { margin-bottom: 20px; }
+  .party-page .denim { background-size: auto, 720px auto; }
+  .crystal-flower { width: 100px; right: -31px; }
+  .ticket-heading .ticket-disco { width: 92px; height: 92px; }
+}
