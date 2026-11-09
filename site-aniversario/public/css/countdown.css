@@ -1,0 +1,34 @@
+.countdown {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  margin-bottom: 38px;
+  padding: 22px 16px;
+  border: 1px solid var(--cor-linha-noturna);
+  border-top: 3px solid var(--cor-pink);
+  border-radius: var(--raio);
+  outline: 1px dashed var(--cor-jeans-claro);
+  outline-offset: -8px;
+  background: var(--cor-superficie-noturna);
+  color: var(--cor-texto-noturno);
+  box-shadow: 5px 6px 0 var(--cor-noite);
+  text-align: center;
+}
+.countdown-copy .eyebrow { margin-bottom: 8px; }
+.countdown h2 { font-size: clamp(23px, 4vw, 32px); letter-spacing: -.04em; }
+.countdown-date { margin-top: 10px; color: var(--cor-suave-noturno); font-size: 11px; }
+.countdown-units { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 400px; margin: 0 auto; }
+.countdown-unit { display: flex; flex-direction: column; min-width: 0; }
+.countdown-unit dd { order: -1; margin: 0; padding: 10px 2px; border-radius: 4px; background: var(--cor-pink); color: var(--cor-jeans-escuro); font: 900 clamp(26px, 6vw, 42px)/1.2 var(--fonte-mono); font-variant-numeric: tabular-nums; }
+.countdown-unit:nth-child(2) dd, .countdown-unit:nth-child(4) dd { background: var(--cor-amarelo); }
+.countdown-unit:nth-child(3) dd { background: var(--cor-azul); }
+.countdown-unit dt { margin-top: 8px; font: 700 10px/1.5 var(--fonte-mono); }
+.countdown-message { color: var(--cor-amarelo); font: italic 700 26px/1.3 var(--fonte-editorial); }
+:root[data-theme="light"] .countdown { background: var(--cor-papel); color: var(--cor-texto); border-color: var(--cor-jeans-claro); border-top-color: var(--cor-pink); }
+:root[data-theme="light"] .countdown .eyebrow { color: var(--cor-pink-escuro); }
+:root[data-theme="light"] .countdown-date { color: var(--cor-suave); }
+:root[data-theme="light"] .countdown-message { color: var(--cor-pink-escuro); }
+@media (min-width: 700px) {
+  .countdown { grid-template-columns: 1fr 1fr; align-items: center; gap: 30px; padding: 28px; margin-bottom: 48px; text-align: left; }
+  .countdown-units { text-align: center; }
+}

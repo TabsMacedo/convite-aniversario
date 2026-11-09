@@ -15,8 +15,10 @@
   <link rel="stylesheet" href="/css/decorations.css">
   <link rel="stylesheet" href="/css/theme-y2k.css">
   <link rel="stylesheet" href="/css/theme-toggle.css">
+  <link rel="stylesheet" href="/css/countdown.css">
   <script src="/js/theme.js"></script>
   <script src="/js/rsvp.js" defer></script>
+  <script src="/js/countdown.js" defer></script>
 </head>
 <body class="party-page">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -128,6 +130,16 @@
           <svg class="y2k-icon ticket-chrome-star" aria-hidden="true" focusable="false"><use href="#y2k-pink-star"/></svg>
         </div>
       </div>
+      <section class="countdown container" aria-labelledby="countdown-title" data-countdown-at="2027-01-30T12:00:00-03:00">
+        <div class="countdown-copy"><p class="eyebrow"><span aria-hidden="true">✦</span> CONTAGEM REGRESSIVA</p><h2 id="countdown-title">O replay tá chegando!</h2><p class="countdown-date" id="countdown-date">30 de janeiro de 2027 · meio-dia, em Araras</p></div>
+        <dl class="countdown-units" role="timer" aria-live="off" aria-describedby="countdown-date" hidden>
+          <div class="countdown-unit"><dt>dias</dt><dd data-countdown-unit="days">00</dd></div>
+          <div class="countdown-unit"><dt>horas</dt><dd data-countdown-unit="hours">00</dd></div>
+          <div class="countdown-unit"><dt>minutos</dt><dd data-countdown-unit="minutes">00</dd></div>
+          <div class="countdown-unit"><dt>segundos</dt><dd data-countdown-unit="seconds">00</dd></div>
+        </dl>
+        <p class="countdown-message" role="status" hidden>Chegou a hora de celebrar! ♡</p>
+      </section>
       <div class="party-strip" aria-hidden="true"><span>JEANS, BRILHO & BOAS MEMÓRIAS</span><span>✦</span><span>30 JAN · 12H</span><span>✦</span><span>O REPLAY QUE A GENTE MERECE</span><span>✦</span></div>
     </section>
 

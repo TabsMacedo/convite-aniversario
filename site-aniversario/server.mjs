@@ -172,8 +172,8 @@ export async function createApp(options = {}) {
   };
   const staticPaths = new Map([
     ['/', ['index.html', 'text/html']], ['/admin', ['admin.html', 'text/html']], ['/admin/', ['admin.html', 'text/html']],
-    ...['variables', 'base', 'layout', 'components', 'decorations', 'theme-y2k', 'theme-toggle', 'admin'].map((name) => [`/css/${name}.css`, [`css/${name}.css`, 'text/css']]),
-    ...['rsvp', 'admin', 'theme'].map((name) => [`/js/${name}.js`, [`js/${name}.js`, 'text/javascript']]),
+    ...['variables', 'base', 'layout', 'components', 'decorations', 'theme-y2k', 'theme-toggle', 'countdown', 'admin'].map((name) => [`/css/${name}.css`, [`css/${name}.css`, 'text/css']]),
+    ...['rsvp', 'admin', 'theme', 'countdown'].map((name) => [`/js/${name}.js`, [`js/${name}.js`, 'text/javascript']]),
     ['/favicon.svg', ['favicon.svg', 'image/svg+xml']], ['/robots.txt', ['robots.txt', 'text/plain']],
     ...['jeans-colagem.jpg', 'jornal-recorte.jpg'].map((file) => [`/images/${file}`, [`images/${file}`, 'image/jpeg']]),
     ...['flor-cristal.png', 'globo-festa.png', 'beijo-pink.png', 'beijo-pink-sem-fundo.png'].map((file) => [`/images/${file}`, [`images/${file}`, 'image/png']]),
