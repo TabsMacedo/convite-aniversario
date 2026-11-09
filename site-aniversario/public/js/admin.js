@@ -10,6 +10,12 @@ function notify(element, text, error = false) {
 }
 
 function showLogin(text = '') {
+  $('#companions-dialog').close();
+  $('#companions-note').textContent = '';
+  $('#companions-owner').textContent = '';
+  $('#registered-companions').textContent = '';
+  $('#companions-names').value = '';
+  editingResponse = undefined;
   responses = [];
   $('#response-list').replaceChildren();
   for (const key of ['yes','maybe','no','total']) $(`#count-${key}`).textContent = '0';
@@ -55,7 +61,7 @@ const normalize = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, 
 function renderList() {
   const query = normalize($('#search').value.trim());
   const filter = $('#filter').value;
-  const visible = responses.filter((row) => (filter === 'all' || row.status === filter) && normalize(`${row.name} ${row.note}`).includes(query));
+  const visible = responses.filter((row) => (filter === 'all' || filter === 'review' && row.needs_review || row.status === filter) && normalize(`${row.name} ${row.note}`).includes(query));
   const fragment = document.createDocumentFragment();
   for (const row of visible) {
     const tr = document.createElement('tr');
@@ -63,11 +69,37 @@ function renderList() {
     const strong = document.createElement('strong');
     strong.textContent = row.name;
     name.append(strong);
+    if (row.is_companion) {
+      const description = document.createElement('small');
+      description.className = 'companion-description';
+      description.textContent = row.automatic ? 'Incluído pela observação' : 'Acompanhante';
+      name.append(description);
+    } else if (row.group_size) {
+      const size = document.createElement('small');
+      size.className = 'companion-description';
+      size.textContent = `${row.group_size} ${row.group_size === 1 ? 'pessoa' : 'pessoas'} no grupo`;
+      name.append(size);
+    }
     const badge = document.createElement('span');
     badge.className = `status-badge status-${row.status}`;
     badge.textContent = labels[row.status];
     status.append(badge);
     note.textContent = row.note || 'Sem observação.';
+    if (!row.is_companion) {
+      if (row.needs_review) {
+        const warning = document.createElement('p');
+        warning.className = 'review-warning';
+        warning.textContent = `Conferir: ${row.review_reason}`;
+        note.append(warning);
+      }
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'companion-edit';
+      edit.textContent = 'Conferir acompanhantes';
+      edit.setAttribute('aria-label', `Conferir acompanhantes de ${row.name}`);
+      edit.addEventListener('click', () => openCompanions(row));
+      note.append(edit);
+    }
     date.textContent = formatDate(row.updated_at);
     tr.append(name, status, note, date);
     fragment.append(tr);
@@ -75,7 +107,7 @@ function renderList() {
   $('#response-list').replaceChildren(fragment);
   $('#empty-list').hidden = visible.length > 0;
   $('#empty-list').textContent = responses.length ? 'Nenhuma resposta encontrada com essa busca.' : 'Nenhuma resposta por aqui ainda. Assim que alguém responder, vai aparecer nesta lista. ♡';
-  $('#list-summary').textContent = `${visible.length} de ${responses.length} ${responses.length === 1 ? 'resposta' : 'respostas'}`;
+  $('#list-summary').textContent = `${visible.length} de ${responses.length} ${responses.length === 1 ? 'pessoa' : 'pessoas'}`;
 }
 
 async function loadResponses(initial = false) {
@@ -87,6 +119,9 @@ async function loadResponses(initial = false) {
     for (const row of responses) totals[row.status]++;
     for (const [key, count] of Object.entries(totals)) $(`#count-${key}`).textContent = String(count);
     $('#count-total').textContent = String(responses.length);
+    const reviewCount = responses.filter((row) => row.needs_review).length;
+    $('#review-summary').hidden = reviewCount === 0;
+    if (reviewCount) $('#review-summary').textContent = `${reviewCount} ${reviewCount === 1 ? 'recado precisa' : 'recados precisam'} de conferência. O total considera as pessoas identificadas até agora; grupos sem quantidade clara ainda podem estar incompletos. Use o filtro “Observações para conferir”.`;
     $('#updated-at').textContent = `Atualizado em ${formatDate(new Date())}`;
     renderList();
     login.hidden = true;
@@ -151,4 +186,36 @@ $('#download').addEventListener('click', async () => {
 $('#refresh').addEventListener('click', () => loadResponses());
 $('#search').addEventListener('input', renderList);
 $('#filter').addEventListener('change', renderList);
+let editingResponse;
+function openCompanions(row) {
+  editingResponse = row.id;
+  $('#companions-owner').textContent = `Convidado(a): ${row.name}`;
+  $('#companions-note').textContent = row.note || 'Sem observação.';
+  $('#registered-companions').textContent = row.registered_companions?.length ? `Já cadastrados e contados: ${row.registered_companions.join(', ')}.` : 'Nenhum acompanhante já cadastrado separadamente neste grupo.';
+  $('#companions-names').value = (row.additional_companions || []).join('\n');
+  $('#companions-message').hidden = true;
+  $('#companions-dialog').showModal();
+  $('#companions-names').focus();
+}
+
+async function saveCompanions(reset = false) {
+  $('#save-companions').disabled = true;
+  $('#reset-companions').disabled = true;
+  try {
+    const companions = $('#companions-names').value.split(/\r?\n/u).map((name) => name.trim()).filter(Boolean);
+    const result = await api('/api/admin/companions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ response_id: editingResponse, companions, reset }) });
+    $('#companions-dialog').close();
+    await loadResponses();
+    if (!dashboard.hidden) notify($('#dashboard-message'), result.message);
+  } catch (error) {
+    if (error.status === 401) handleError(error);
+    else notify($('#companions-message'), error.message, true);
+  } finally {
+    $('#save-companions').disabled = false;
+    $('#reset-companions').disabled = false;
+  }
+}
+$('#companions-form').addEventListener('submit', (event) => { event.preventDefault(); saveCompanions(); });
+$('#reset-companions').addEventListener('click', () => saveCompanions(true));
+$('#close-companions').addEventListener('click', () => $('#companions-dialog').close());
 loadResponses(true);

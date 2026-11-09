@@ -112,8 +112,8 @@ test('fluxo real de convidados, autenticação, DOCX e persistência', async (t)
     assert.equal(JSON.parse(Buffer.from(token.split('.')[0], 'base64url')).alg, 'HS256');
     const response = await request('/api/admin/responses', { headers: { Cookie: adminCookie } });
     const result = await response.json();
-    assert.equal(result.responses.length, 10);
-    assert.deepEqual(result.responses.map((r) => r.status).sort(), ['no', ...Array(9).fill('yes')]);
+    assert.equal(result.responses.length, 11);
+    assert.deepEqual(result.responses.map((r) => r.status).sort(), ['no', ...Array(10).fill('yes')]);
     assert.ok(result.responses.some((r) => r.note === note));
     assert.ok(result.responses.every((r) => !('edit_hash' in r)));
   });
@@ -134,7 +134,7 @@ test('fluxo real de convidados, autenticação, DOCX e persistência', async (t)
     assert.ok(files.has('_rels/.rels'));
     const xml = files.get('word/document.xml');
     assert.match(xml, /<w:tbl>/);
-    assert.match(xml, /Vou: 9 \| Talvez: 0 \| Não vou: 1/);
+    assert.match(xml, /Vou: 10 \| Talvez: 0 \| Não vou: 1/);
     assert.ok(xml.includes('Ana &amp; João &lt;família&gt;'));
     assert.ok(xml.includes('Recado com &lt;símbolos&gt; &amp; acentos: coração!'));
   });
@@ -273,6 +273,47 @@ test('atualização de Elvis ignora nomes parecidos e homônimos sem editar seus
       assert.equal(db.prepare('SELECT count(*) AS total FROM organizer_updates').get().total, 0);
     } finally { db.close(); }
   }
+});
+
+test('conferência de acompanhantes exige login, persiste e sinaliza alterações no recado', async (t) => {
+  const app = await fixture();
+  t.after(() => app.close());
+  const request = (path, options) => fetch(app.url + path, options);
+  assert.equal((await request('/api/admin/companions', post({ response_id: 'test', companions: [] }))).status, 401);
+  const submitted = await request('/api/rsvp', post({ name: 'Stephanie', status: 'yes', note: 'Vou com minha família.' }));
+  const guestCookie = cookieFrom(submitted);
+  const login = await request('/api/admin/login', post({ password }));
+  const cookie = cookieFrom(login);
+  const list = async () => (await (await request('/api/admin/responses', { headers: { Cookie: cookie } })).json());
+  const before = await list();
+  const owner = before.responses.find((row) => row.name === 'Stephanie');
+  assert.equal(owner.needs_review, true);
+  const companions = ['Esposo', 'Laís', 'Enteado 1', 'Enteado 2'];
+  assert.equal((await request('/api/admin/companions', post({ response_id: owner.id, companions }, { Cookie: cookie, Origin: 'https://outra.example' }))).status, 403);
+  for (const invalid of [null, [''], ['x'.repeat(81)], Array(41).fill('Pessoa'), ['Nome\u0000']]) {
+    assert.equal((await request('/api/admin/companions', post({ response_id: owner.id, companions: invalid }, { Cookie: cookie }))).status, 400);
+  }
+  assert.equal((await request('/api/admin/companions', post({ response_id: 'missing', companions }, { Cookie: cookie }))).status, 404);
+  assert.equal((await request('/api/admin/companions', post({ response_id: owner.id, companions }, { Cookie: cookie }))).status, 200);
+  await app.restart();
+  const after = await list();
+  assert.equal(after.totals.yes, 13);
+  assert.equal(after.totals.needs_review, 0);
+  assert.equal(after.responses.find((row) => row.id === owner.id).group_size, 5);
+  assert.deepEqual(after.responses.filter((row) => row.parent_id === owner.id).map((row) => row.name), companions);
+  const download = await request('/api/admin/export.docx', { headers: { Cookie: cookie } });
+  const xml = unzipStored(Buffer.from(await download.arrayBuffer())).get('word/document.xml');
+  assert.match(xml, /Vou: 13 \| Talvez: 0 \| Não vou: 0/);
+  assert.ok(xml.includes('Laís'));
+  await request('/api/rsvp', post({ name: 'Stephanie', status: 'maybe', note: 'Bruno vai comigo.' }, { Cookie: guestCookie }));
+  const changed = await list();
+  assert.equal(changed.totals.maybe, 5);
+  assert.equal(changed.responses.find((row) => row.id === owner.id).needs_review, true);
+  assert.equal((await request('/api/admin/companions', post({ response_id: owner.id, reset: true }, { Cookie: cookie }))).status, 200);
+  const reset = await list();
+  assert.equal(reset.totals.maybe, 2);
+  assert.equal(reset.totals.total, 10);
+  assert.equal(reset.responses.find((row) => row.id === owner.id).group_size, 2);
 });
 
 test('produção usa cookies Secure e limita tentativas de senha', async (t) => {

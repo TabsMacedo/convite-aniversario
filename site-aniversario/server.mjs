@@ -8,6 +8,7 @@ import { gzipSync } from 'node:zlib';
 import { DatabaseSync } from 'node:sqlite';
 import { createGuestDocx } from './lib/docx.mjs';
 import { registerConfirmedGuests } from './lib/confirmed-guests.mjs';
+import { expandCompanions, peopleSummary } from './lib/companions.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const scrypt = promisify(scryptCallback);
@@ -136,13 +137,17 @@ export async function createApp(options = {}) {
       name TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('yes','maybe','no')),
       note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL
     ) STRICT;
-    CREATE TABLE IF NOT EXISTS sessions (jti TEXT PRIMARY KEY, expires_at INTEGER NOT NULL) STRICT;`);
+    CREATE TABLE IF NOT EXISTS sessions (jti TEXT PRIMARY KEY, expires_at INTEGER NOT NULL) STRICT;
+    CREATE TABLE IF NOT EXISTS companion_overrides (
+      response_id TEXT PRIMARY KEY REFERENCES responses(id), companions TEXT NOT NULL, note_snapshot TEXT NOT NULL
+    ) STRICT;`);
   registerConfirmedGuests(db);
   if (passwordChanged) db.exec('DELETE FROM sessions');
 
   const cookie = (name, value, seconds) => `${name}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${seconds}${secure ? '; Secure' : ''}`;
   const findResponse = db.prepare('SELECT name, status, note FROM responses WHERE edit_hash = ?');
   const rows = db.prepare('SELECT id, name, status, note, created_at, updated_at FROM responses ORDER BY updated_at DESC, id');
+  const listPeople = () => expandCompanions(rows.all(), db.prepare('SELECT * FROM companion_overrides').all());
   const session = (req) => {
     const token = readToken(cookies(req).tabata_admin || '', config.jwtSecret);
     return token && db.prepare('SELECT jti FROM sessions WHERE jti = ? AND expires_at > ?').get(token.jti, Math.floor(Date.now() / 1000)) ? token : null;
@@ -243,11 +248,29 @@ export async function createApp(options = {}) {
       }
       if (route === '/api/admin/responses' && req.method === 'GET') {
         requireAdmin(req);
-        return json(res, 200, { responses: rows.all() });
+        const responses = listPeople();
+        return json(res, 200, { responses, totals: peopleSummary(responses) });
+      }
+      if (route === '/api/admin/companions' && req.method === 'POST') {
+        requireAdmin(req);
+        const body = await readJson(req);
+        if (typeof body.response_id !== 'string' || body.response_id.length > 128) throw new HttpError(400, 'Escolha um convidado da lista.');
+        const owner = db.prepare('SELECT id, note FROM responses WHERE id = ?').get(body.response_id);
+        if (!owner) throw new HttpError(404, 'Esse convidado não foi encontrado. Atualize a lista.');
+        if (body.reset === true) db.prepare('DELETE FROM companion_overrides WHERE response_id = ?').run(owner.id);
+        else {
+          if (!Array.isArray(body.companions) || body.companions.length > 40 || body.companions.some((name) => typeof name !== 'string' || !name.trim() || name.trim().length > 80 || /[\x00-\x1f\x7f]/u.test(name))) {
+            throw new HttpError(400, 'Escreva um acompanhante por linha, com até 80 caracteres por nome e no máximo 40 acompanhantes.');
+          }
+          const companions = body.companions.map((name) => name.trim().normalize('NFC'));
+          db.prepare(`INSERT INTO companion_overrides VALUES (?, ?, ?) ON CONFLICT(response_id)
+            DO UPDATE SET companions = excluded.companions, note_snapshot = excluded.note_snapshot`).run(owner.id, JSON.stringify(companions), owner.note);
+        }
+        return json(res, 200, { message: body.reset === true ? 'Leitura automática restaurada.' : 'Acompanhantes conferidos e salvos.' });
       }
       if (route === '/api/admin/export.docx' && req.method === 'GET') {
         requireAdmin(req);
-        const document = createGuestDocx(rows.all());
+        const document = createGuestDocx(listPeople());
         res.writeHead(200, { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Content-Disposition': 'attachment; filename="Presencas-Tabata.docx"', 'Content-Length': document.length, 'Cache-Control': 'no-store' });
         return res.end(document);
       }

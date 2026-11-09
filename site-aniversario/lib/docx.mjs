@@ -62,9 +62,11 @@ const date = (value) => new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', t
 export function createGuestDocx(responses, now = new Date()) {
   const totals = { yes: 0, maybe: 0, no: 0 };
   for (const response of responses) totals[response.status]++;
+  const reviewCount = responses.filter((row) => row.needs_review).length;
+  const countExplanation = `Os totais contam pessoas, incluindo acompanhantes identificados nas observações e conferidos pela Tábata. Cada acompanhante indica quem acompanha. ${reviewCount ? `${reviewCount} recado(s) precisam de conferência: grupos sem quantidade clara podem estar incompletos.` : 'Confira as quantidades e os nomes antes de usar a lista final.'}`;
   const rows = [
     ['Nome', 'Resposta', 'Observação', 'Atualização'],
-    ...responses.map((r) => [r.name, labels[r.status], r.note || '—', date(r.updated_at)]),
+    ...responses.map((r) => [r.name, labels[r.status], [r.note || '—', r.group_size ? `Grupo: ${r.group_size} pessoa(s), contando este convidado e seus acompanhantes já listados.` : '', r.needs_review ? `CONFERIR: ${r.review_reason}` : ''].filter(Boolean).join('\n'), date(r.updated_at)]),
   ];
   if (!responses.length) rows.push(['Nenhuma presença registrada.', '—', '—', '—']);
   const widths = [2350, 1100, 4000, 1850];
@@ -72,6 +74,6 @@ export function createGuestDocx(responses, now = new Date()) {
   return zip({
     '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>',
     '_rels/.rels': '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>',
-    'word/document.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraph("Tábata's party — confirmações de presença", true)}${paragraph('30 de janeiro de 2027, às 12h • Chácara Recanto Feliz • Araras - SP')}${paragraph(`Exportado em ${date(now)}`)}${paragraph(`Vou: ${totals.yes} | Talvez: ${totals.maybe} | Não vou: ${totals.no} | Total de registros: ${responses.length}`, true)}${paragraph('Os totais incluem as respostas dos convidados e as presenças confirmadas pela Tábata. Familiares com registro próprio já estão contados. Outros acompanhantes mencionados nas observações devem ser considerados separadamente.')}${table}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:bottom="900" w:left="1100" w:right="1100"/></w:sectPr></w:body></w:document>`,
+    'word/document.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paragraph("Tábata's party — confirmações de presença", true)}${paragraph('30 de janeiro de 2027, às 12h • Chácara Recanto Feliz • Araras - SP')}${paragraph(`Exportado em ${date(now)}`)}${paragraph(`Vou: ${totals.yes} | Talvez: ${totals.maybe} | Não vou: ${totals.no} | Total de pessoas: ${responses.length}`, true)}${paragraph(countExplanation)}${table}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:bottom="900" w:left="1100" w:right="1100"/></w:sectPr></w:body></w:document>`,
   });
 }

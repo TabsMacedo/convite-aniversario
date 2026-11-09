@@ -35,19 +35,33 @@
         <div class="stat stat-yes"><span>Vou</span><strong id="count-yes">0</strong><small>confirmados</small></div>
         <div class="stat stat-maybe"><span>Talvez</span><strong id="count-maybe">0</strong><small>ainda vão decidir</small></div>
         <div class="stat stat-no"><span>Não vou</span><strong id="count-no">0</strong><small>avisaram que não vão</small></div>
-        <div class="stat stat-total"><span>Total</span><strong id="count-total">0</strong><small>presenças registradas</small></div>
+        <div class="stat stat-total"><span>Total</span><strong id="count-total">0</strong><small>pessoas na lista</small></div>
       </div>
-      <p class="count-explanation">Os números incluem as respostas dos convidados e as presenças confirmadas por você. Acompanhantes cadastrados individualmente já entram nos totais; a observação indica quem eles acompanham. Confira nas observações os demais acompanhantes que ainda não têm um registro próprio.</p>
+      <p class="count-explanation">Os números contam pessoas, incluindo acompanhantes identificados nas observações. Cada acompanhante aparece na lista com referência a quem o convidou. Confira os recados sinalizados e use “Conferir acompanhantes” para ajustar nomes ou quantidades.</p>
+      <p id="review-summary" class="notice" role="status" hidden></p>
       <div class="dashboard-actions"><div><button class="button button-pink" id="download" type="button">Baixar lista em DOCX <span aria-hidden="true">↓</span></button><button class="button button-outline" id="refresh" type="button">Atualizar lista <span aria-hidden="true">↻</span></button></div><p id="updated-at" class="small-note"></p></div>
       <p id="dashboard-message" class="notice" role="status" aria-live="polite" hidden></p>
       <div class="response-panel">
-        <div class="filters"><div><label for="search">Procurar por nome ou recado</label><input id="search" type="search" placeholder="Digite para procurar…" autocomplete="off"></div><div><label for="filter">Mostrar respostas</label><select id="filter"><option value="all">Todas as respostas</option><option value="yes">Vou</option><option value="maybe">Talvez</option><option value="no">Não vou</option></select></div></div>
+        <div class="filters"><div><label for="search">Procurar por nome ou recado</label><input id="search" type="search" placeholder="Digite para procurar…" autocomplete="off"></div><div><label for="filter">Mostrar respostas</label><select id="filter"><option value="all">Todas as pessoas</option><option value="yes">Vou</option><option value="maybe">Talvez</option><option value="no">Não vou</option><option value="review">Observações para conferir</option></select></div></div>
         <p id="list-summary" class="small-note" role="status" aria-live="polite"></p>
         <div class="table-wrap"><table class="response-table"><caption class="sr-only">Nomes, respostas, observações e data da última atualização</caption><thead><tr><th scope="col">Convidado(a)</th><th scope="col">Resposta</th><th scope="col">Observação</th><th scope="col">Atualização</th></tr></thead><tbody id="response-list"></tbody></table></div>
         <p id="empty-list" class="empty-state" hidden>Nenhuma resposta por aqui ainda. Assim que alguém responder, vai aparecer nesta lista. ♡</p>
       </div>
       <p class="small-note export-note">O documento DOCX inclui todas as respostas e observações, mesmo quando há um filtro na tela. Você pode abri-lo no Word ou em outro editor compatível.</p>
     </section>
+    <dialog id="companions-dialog" aria-labelledby="companions-title">
+      <form id="companions-form">
+        <h2 id="companions-title">Conferir acompanhantes</h2>
+        <p id="companions-owner"></p>
+        <p id="companions-note" class="companion-note"></p>
+        <p id="registered-companions" class="small-note"></p>
+        <label for="companions-names">Acompanhantes adicionais — um por linha</label>
+        <p id="companions-help" class="small-note">Não inclua o próprio convidado nem os acompanhantes já cadastrados acima. Se não souber um nome, escreva, por exemplo, “Enteado 1” e “Enteado 2”. Deixe vazio se não houver mais ninguém.</p>
+        <textarea id="companions-names" rows="6" maxlength="3240" aria-describedby="companions-help"></textarea>
+        <p id="companions-message" class="notice notice-error" role="status" hidden></p>
+        <div class="companion-actions"><button id="save-companions" class="button button-pink" type="submit">Salvar conferência</button><button id="reset-companions" class="button button-outline" type="button">Usar leitura automática</button><button id="close-companions" class="button button-outline" type="button">Cancelar</button></div>
+      </form>
+    </dialog>
     <noscript><p class="notice notice-error">Ative o JavaScript no navegador para entrar e consultar as respostas.</p></noscript>
   </main>
   <footer class="admin-footer container"><span>Com carinho e organização. ♡</span><a href="/">Voltar ao convite</a></footer>
